@@ -18,7 +18,6 @@ class ShellEmulator:
         self.text = tk.Text(root, font=("Helvetica", 18), wrap='word', bg="black", fg="green", insertbackground="white")
         self.text.pack(expand=True, fill='both', padx=10, pady=10)
 
-        self.text.insert("end", "Добро пожаловать в эмулятор командной строки!\n")
         self.prompt()
 
         self.text.bind("<Return>", self.on_submit)
@@ -36,7 +35,7 @@ class ShellEmulator:
     def on_submit(self, event=None):
         current_text = self.text.get("1.0", "end").strip()
 
-        last_prompt_index = current_text.rfind(f"{self.USER}@{self.COMPUTER}:")  # Поиск последнего приглашения
+        last_prompt_index = current_text.rfind(f"{self.USER}@{self.COMPUTER}:")
         if last_prompt_index == -1:
             return
 
@@ -58,7 +57,7 @@ class ShellEmulator:
                     self.curDir = result
                     self.text.insert("end", f"\nПерешли в: /{'/'.join(self.curDir) if self.curDir else '~'}\n")
             else:
-                self.text.insert("end", "cd: missing argument\n")
+                self.text.insert("end", "нет аргумента\n")
         elif command == "clear":
             self.text.delete("1.0", "end")
         elif command == "ls":
@@ -67,7 +66,7 @@ class ShellEmulator:
         elif command.startswith("mv"):
             parts = command.split()
             if len(parts) != 3:
-                self.text.insert("end", "\nError: mv requires two arguments\n")
+                self.text.insert("end", "\nТребуется два аргумента\n")
                 return
 
             old_name, new_name_or_path = parts[1].strip(), parts[2].strip()
@@ -81,7 +80,7 @@ class ShellEmulator:
         elif command.startswith("cp"):
             parts = command.split()
             if len(parts) != 3:
-                self.text.insert("end", "\nError: cp requires two arguments\n")
+                self.text.insert("end", "\nТребуется два аргумента\n")
                 return
 
             file_name, target_path = parts[1].strip(), parts[2].strip()

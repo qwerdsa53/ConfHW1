@@ -36,6 +36,4 @@ def print_tree(tree, indent=""):
         print_tree(dir_content, indent + "  ")
 
 
-fs = load_virtual_fs("C:/Users/serge/PycharmProjects/ConfHW1/myZIP.zip")
-print_tree(fs)
 

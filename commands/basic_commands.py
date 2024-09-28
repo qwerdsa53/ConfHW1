@@ -15,9 +15,9 @@ def ls(current_path, fs):
             result.extend([f"  {dir_name}/" for dir_name in directories])
         if files:
             result.extend([f"  {file_name}" for file_name in files])
-        return "\n".join(result) if result else "Empty directory"
+        return "\n".join(result) if result else "Директория пусстая"
     except FileNotFoundError:
-        return "Directory not found."
+        return "Директория не найдена"
 
 
 def get_directory(path, fs):
@@ -25,7 +25,7 @@ def get_directory(path, fs):
     for directory in path:
         current_directory = current_directory['_dirs'].get(directory, None)
         if current_directory is None:
-            raise FileNotFoundError(f"Directory '{directory}' not found")
+            raise FileNotFoundError(f"Директория '{directory}' не найдена")
     return current_directory
 
 
@@ -35,11 +35,11 @@ def cd(new_directory, current_path, fs):
         if current_path:
             current_path.pop()
         else:
-            return "Already at the root directory"
+            return "Вы находитесь в верхней директории"
     elif new_directory.strip() in current_directory['_dirs']:
         current_path.append(new_directory.strip())
     else:
-        return "Directory not found"
+        return "Директория не найдена"
     return current_path
 
 
@@ -50,13 +50,13 @@ def rename(old_name, new_name, cur_dir, fs, zip_path):
         current_directory['_dirs'][new_name] = current_directory['_dirs'].pop(old_name)
         print_tree(current_directory)
         update_zip_with_rename(old_name, new_name, cur_dir, zip_path, is_directory=True)
-        return f"Directory '{old_name}' renamed to '{new_name}'"
+        return f"Директория '{old_name}' переименована '{new_name}'"
 
     elif old_name in current_directory['_files']:
         current_directory['_files'][new_name] = current_directory['_files'].pop(old_name)
         print_tree(current_directory)
         update_zip_with_rename(old_name, new_name, cur_dir,zip_path, is_directory=False)
-        return f"File '{old_name}' renamed to '{new_name}'"
+        return f"Файл '{old_name}' переименован '{new_name}'"
 
     else:
         return f"Error: '{old_name}' not found in the current directory"
@@ -87,8 +87,6 @@ def update_zip_with_rename(old_name, new_name, cur_dir, zip_path, is_directory,)
 
 
 def move(file_name, path, cur_dir, fs, zip_path):
-    """Перемещает файл или директорию в виртуальной файловой системе и обновляет zip-архив"""
-
     current_directory = get_directory(cur_dir, fs)
 
     if file_name in current_directory['_files']:
@@ -96,22 +94,22 @@ def move(file_name, path, cur_dir, fs, zip_path):
     elif file_name in current_directory['_dirs']:
         item = current_directory['_dirs'].pop(file_name)
     else:
-        return f"Error: '{file_name}' not found in the current directory"
+        return f"Файл: '{file_name}' не найден в текущей директории"
 
     target_path_parts = path.strip('/').split('/')
     target_directory = get_directory(target_path_parts, fs)
 
     if file_name in target_directory['_files'] or file_name in target_directory['_dirs']:
-        return f"Error: A file or directory named '{file_name}' already exists in the target directory"
+        return f"Файл или директория с именем '{file_name}' уже существует в целевой директории"
 
     if isinstance(item, dict):
         target_directory['_dirs'][file_name] = item
-    else:  # Если это файл
+    else:
         target_directory['_files'][file_name] = item
 
     update_zip_with_move(file_name, path, cur_dir, zip_path, is_directory=isinstance(item, dict))
 
-    return f"'{file_name}' successfully moved to '{path}'"
+    return f"'{file_name}' успешно перемещёен в '{path}'"
 
 
 def update_zip_with_move(file_name, target_path, cur_dir, zip_path, is_directory):
@@ -142,19 +140,19 @@ def copy(file_name, target_path, cur_dir, fs, zip_path):
     current_directory = get_directory(cur_dir, fs)
 
     if file_name in current_directory['_files']:
-        item = current_directory['_files'][file_name]  # Получаем файл
+        item = current_directory['_files'][file_name]
         is_directory = False
     elif file_name in current_directory['_dirs']:
-        item = current_directory['_dirs'][file_name]  # Получаем директорию
+        item = current_directory['_dirs'][file_name]
         is_directory = True
     else:
-        return f"Error: '{file_name}' not found in the current directory"
+        return f"'{file_name}' не найден в текущей директории"
 
     target_path_parts = target_path.strip('/').split('/')
     target_directory = get_directory(target_path_parts, fs)
 
     if file_name in target_directory['_files'] or file_name in target_directory['_dirs']:
-        return f"Error: A file or directory named '{file_name}' already exists in the target directory"
+        return f"Файл или директория с именем '{file_name}' уже существует в целевой директории"
 
     if is_directory:
         target_directory['_dirs'][file_name] = item.copy()  # Копируем всю структуру
@@ -163,7 +161,7 @@ def copy(file_name, target_path, cur_dir, fs, zip_path):
 
     update_zip_with_copy(file_name, target_path, cur_dir, zip_path, is_directory)
 
-    return f"'{file_name}' successfully copied to '{target_path}'"
+    return f"'{file_name}' успешно сскопирован в '{target_path}'"
 
 
 def update_zip_with_copy(file_name, target_path, cur_dir, zip_path, is_directory):
