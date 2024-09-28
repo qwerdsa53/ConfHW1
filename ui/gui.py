@@ -1,46 +1,96 @@
 import tkinter as tk
 
-# Функция для обработки нажатия клавиши Enter
-def on_submit(event=None):
-    # Получаем введённую команду
-    user_input = text.get("insert linestart", "insert lineend").strip()
-    if user_input:
-        # Выводим команду в текстовом виджете
-        text.insert("end", f"\nВы ввели: {user_input}")
-        # Пример обработки команды, можно добавить свои команды
-        if user_input == "exit":
-            root.quit()
-        elif user_input == "clear":
-            text.delete("1.0", "end")
+from commands.basic_commands import cd, ls, rename, move, copy
+from fs.unpack_fs import load_virtual_fs
+
+class ShellEmulator:
+    def __init__(self, root, config):
+        self.root = root
+        self.USER = config['username']
+        self.COMPUTER = config['computer']
+        self.fs = load_virtual_fs(config['fs_path'])
+        self.curDir = []
+        self.zip_path = config['fs_path']
+        self.root.title("Командная строка")
+        self.root.configure(bg="black")
+        self.root.attributes("-fullscreen", True)
+        self.root.bind("<Escape>", self.exit_fullscreen)
+        self.text = tk.Text(root, font=("Helvetica", 18), wrap='word', bg="black", fg="green", insertbackground="white")
+        self.text.pack(expand=True, fill='both', padx=10, pady=10)
+
+        self.text.insert("end", "Добро пожаловать в эмулятор командной строки!\n")
+        self.prompt()
+
+        self.text.bind("<Return>", self.on_submit)
+
+        self.text.mark_set("insert", "end")
+
+    def prompt(self):
+        current_dir_str = '/' + '/'.join(self.curDir) if self.curDir else '~'
+        self.text.insert("end", f"{self.USER}@{self.COMPUTER}:{current_dir_str}$ ")
+        self.text.see("end")
+
+    def exit_fullscreen(self, event=None):
+        self.root.attributes("-fullscreen", False)
+
+    def on_submit(self, event=None):
+        current_text = self.text.get("1.0", "end").strip()
+
+        last_prompt_index = current_text.rfind(f"{self.USER}@{self.COMPUTER}:")  # Поиск последнего приглашения
+        if last_prompt_index == -1:
+            return
+
+        user_input = current_text[last_prompt_index:].split('$', 1)[-1].strip()
+
+        if user_input:
+            self.process_command(user_input)
+            self.prompt()
+        return "break"
+
+    def process_command(self, command):
+        if command.startswith("cd"):
+            new_dir = command.split(" ", 1)[1].strip() if len(command.split()) > 1 else None
+            if new_dir:
+                result = cd(new_dir, self.curDir, self.fs)
+                if isinstance(result, str):
+                    self.text.insert("end", result + "\n")
+                else:
+                    self.curDir = result
+                    self.text.insert("end", f"\nПерешли в: /{'/'.join(self.curDir) if self.curDir else '~'}\n")
+            else:
+                self.text.insert("end", "cd: missing argument\n")
+        elif command == "clear":
+            self.text.delete("1.0", "end")
+        elif command == "ls":
+            result = ls(self.curDir, self.fs)
+            self.text.insert("end", f"\n{result}\n")
+        elif command.startswith("mv"):
+            parts = command.split()
+            if len(parts) != 3:
+                self.text.insert("end", "\nError: mv requires two arguments\n")
+                return
+
+            old_name, new_name_or_path = parts[1].strip(), parts[2].strip()
+
+            if '/' not in new_name_or_path and '\\' not in new_name_or_path:
+                result = rename(old_name, new_name_or_path, self.curDir, self.fs, self.zip_path)
+                self.text.insert("end", f"\n{result}\n")
+            else:
+                result = move(old_name, new_name_or_path, self.curDir, self.fs, self.zip_path)
+                self.text.insert("end", f"\n{result}\n")
+        elif command.startswith("cp"):
+            parts = command.split()
+            if len(parts) != 3:
+                self.text.insert("end", "\nError: cp requires two arguments\n")
+                return
+
+            file_name, target_path = parts[1].strip(), parts[2].strip()
+
+            result = copy(file_name, target_path, self.curDir, self.fs, self.zip_path)
+            self.text.insert("end", f"\n{result}\n")
+        elif command == "exit":
+            exit(0)
         else:
-            # Добавляем результат выполнения команды в текстовое поле
-            text.insert("end", f"\nРезультат выполнения команды: {user_input}")
+            self.text.insert("end", f"\nНеизвестная команда: {command}\n")
 
-    # Прокручиваем текст до конца
-    text.see("end")
 
-# Создаем основное окно
-root = tk.Tk()
-root.title("Командная строка")
-
-# Делаем окно полноэкранным
-root.attributes("-fullscreen", True)
-
-# Позволяем выйти из полноэкранного режима по нажатию клавиши "Esc"
-root.bind("<Escape>", lambda event: root.attributes("-fullscreen", False))
-
-# Создаем многострочное текстовое поле для командной строки
-text = tk.Text(root, font=("Helvetica", 24), wrap='word')
-text.pack(expand=True, fill='both', padx=10, pady=10)
-
-# Добавляем приветствие или приглашение к вводу команды
-text.insert("end", "Введите команду:\n")
-
-# Устанавливаем курсор в конец текста для ввода
-text.mark_set("insert", "end")
-
-# Позволяем нажать Enter для отправки текста
-text.bind("<Return>", on_submit)
-
-# Запуск основного цикла
-root.mainloop()

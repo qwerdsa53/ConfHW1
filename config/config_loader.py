@@ -1,16 +1,12 @@
 import csv
 
-
-def load_config(config_path):
+def load_config(config_file):
     config = {}
-    with open(config_path, 'r') as csvfile:
-        reader = csv.reader(csvfile)
+    with open(config_file, mode='r') as file:
+        reader = csv.DictReader(file)
         for row in reader:
-            key, value = row
-            config[key] = value
+            config['username'] = row['username']
+            config['computer'] = row['computer']
+            config['fs_path'] = row['fs_path']
+            config['startup_script'] = row['startup_script']
     return config
-
-
-if __name__ == '__main__':
-    config = load_config("C:/Users/qwerdsa53/OneDrive/Desktop/file.csv")
-    print(config)
