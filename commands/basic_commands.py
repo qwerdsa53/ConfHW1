@@ -155,13 +155,13 @@ def copy(file_name, target_path, cur_dir, fs, zip_path):
         return f"Файл или директория с именем '{file_name}' уже существует в целевой директории"
 
     if is_directory:
-        target_directory['_dirs'][file_name] = item.copy()  # Копируем всю структуру
+        target_directory['_dirs'][file_name] = item.copy()
     else:
-        target_directory['_files'][file_name] = item.copy()  # Копируем файл
+        target_directory['_files'][file_name] = item.copy()
 
     update_zip_with_copy(file_name, target_path, cur_dir, zip_path, is_directory)
 
-    return f"'{file_name}' успешно сскопирован в '{target_path}'"
+    return f"'{file_name}' успешно скопирован в '{target_path}'"
 
 
 def update_zip_with_copy(file_name, target_path, cur_dir, zip_path, is_directory):

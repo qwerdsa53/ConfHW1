@@ -5,6 +5,7 @@ import os
 def build_tree():
     return {'_dirs': {}, '_files': {}}
 
+
 def add_to_tree(tree, path_parts, content):
     current = tree
     for part in path_parts[:-1]:
@@ -21,11 +22,11 @@ def load_virtual_fs(zip_path):
 
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         for file in zip_ref.namelist():
-            file_content = zip_ref.read(file)
+            file_content = zip_ref.read(file) if not file.endswith('/') else b''
             path_parts = file.split('/')
             add_to_tree(virtual_fs, path_parts, file_content)
-
     return virtual_fs
+
 
 def print_tree(tree, indent=""):
     for file_name in tree['_files']:
@@ -34,6 +35,3 @@ def print_tree(tree, indent=""):
     for dir_name, dir_content in tree['_dirs'].items():
         print(f"{indent}+ {dir_name}/ (directory)")
         print_tree(dir_content, indent + "  ")
-
-
-
